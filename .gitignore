@@ -1,4 +1,8 @@
 __pycache__
+.vscode
+
 *.log
-wasted-time.py
 mapdata
+
+wasted-time.py
+
