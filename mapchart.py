@@ -65,67 +65,72 @@ print("Page loaded.")
 
 
 # wait for user input 
-
 while True:
-
-    userInput = input("Enter UPLOAD or DOWNLOAD to update the map: ").upper()
-
     try:
-        driver.execute_script("arguments[0].scrollIntoView(true);", downup)
-        downup.click()
-    except:
-        pass
-    
-    time.sleep(1)
 
-    if userInput == "UPLOAD":
-        print("Please wait...")
+        userInput = input("Enter UPLOAD or DOWNLOAD to update the map: ").upper()
+        try:
+            driver.execute_script("arguments[0].scrollIntoView(true);", downup)
+            downup.click()
+        except:
+            pass
+        
+        time.sleep(1)
 
-        # Click "download"
-        driver.find_element_by_id("save-config").click()
+        if userInput == "UPLOAD":
+            print("Please wait...")
 
-        time.sleep(2)
+            # Click "download"
+            driver.find_element_by_id("save-config").click()
 
-        # Get latest download
-        files = os.listdir(DOWNLOAD_PATH)
-        latest = max([DOWNLOAD_PATH + "/" + f for f in files], key=os.path.getctime)
+            time.sleep(2)
 
-        # Replace the repo file with the new map data
-        with open(latest) as downloadFile:
-            mapData = downloadFile.read()
-        with open(MAP_DATA_PATH + "/mapchart-data.txt", "w+") as repoFile:
-            repoFile.write(mapData)
+            # Get latest download
+            files = os.listdir(DOWNLOAD_PATH)
+            latest = max([DOWNLOAD_PATH + "/" + f for f in files], key=os.path.getctime)
 
-        os.remove(latest)
+            # Replace the repo file with the new map data
+            with open(latest) as downloadFile:
+                mapData = downloadFile.read()
+            with open(MAP_DATA_PATH + "/mapchart-data.txt", "w+") as repoFile:
+                repoFile.write(mapData)
 
-        # Upload to github
-        mapRepo.index.add("mapchart-data.txt")
-        mapRepo.index.commit("sync")
-        mapRepo.remote().push()
+            os.remove(latest)
 
-        driver.find_element_by_class_name("icon-close").click()
+            # Upload to github
+            mapRepo.index.add("mapchart-data.txt")
+            mapRepo.index.commit("sync")
+            try:
+                mapRepo.remote().push()
+                print("Success!")
+            except:
+                print(f"Upload failed. Please check you are authorised to upload. {e}")
 
-        print("Success!")
+            driver.find_element_by_class_name("icon-close").click()
 
+        elif userInput == "DOWNLOAD":
+            print("Please wait...")
 
-    elif userInput == "DOWNLOAD":
-        print("Please wait...")
+            try:
+                mapRepo.remote().pull()
 
-        mapRepo.remote().pull()
+                with open(MAP_DATA_PATH + "/mapchart-data.txt") as mapDataFile:
+                    mapData = mapDataFile.read()
 
-        with open(MAP_DATA_PATH + "/mapchart-data.txt") as mapDataFile:
-            mapData = mapDataFile.read()
+                driver.find_element_by_id("uploadData").send_keys(mapData)
+                driver.find_element_by_id("upload-config").click()
+            except Exception as e:
+                print(f"Download failed. {e}")
+                driver.find_element_by_class_name("icon-close").click()
 
-        driver.find_element_by_id("uploadData").send_keys(mapData)
-        driver.find_element_by_id("upload-config").click()
+        elif userInput == "EXIT":
+            exit()
 
-        print("Success!")
+        else:
+            print("Unknown command. Type EXIT to exit.")
 
-    elif userInput == "EXIT":
-        exit()
-
-    else:
-        print("Unkown command. Type EXIT to exit.")
+    except Exception as e:
+        print(f"\nAn error occurred. Please contact Ben with the following message:\n{e}\n")
 
 
 
